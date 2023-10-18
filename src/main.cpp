@@ -23,6 +23,12 @@ int g_numAdjustments = 0;
 vector<NetInfo*> g_netInfos;
 map<string, int> g_netNameToId;
 
+vector<int> g_vCapacities;
+vector<int> g_hCapacities;
+vector<int> g_minWidths;
+vector<int> g_minSpacings;
+vector<int> g_minViaSpacings;
+
 void readGrid(std::ifstream& stream, FT* ft) {
   string line;
   getline(stream, line);
@@ -38,9 +44,9 @@ void readGrid(std::ifstream& stream, FT* ft) {
 }
 
 void readVCap(std::ifstream& stream, FT* ft) {
+  g_vCapacities.clear();
   string line;
   getline(stream, line);
-  vector<int> vcaps;
   string token;
   stringstream vcapStream(line);
   vcapStream >> token;
@@ -49,19 +55,14 @@ void readVCap(std::ifstream& stream, FT* ft) {
   assert(token == "capacity");
   int vcapValue;
   while (vcapStream >> vcapValue) {
-    vcaps.push_back(vcapValue);
-  }
-
-  for (int i = 0; i < vcaps.size(); i++) {
-    int layer = i + 1;
-    ft->addVCapacity(vcaps[i] / 2, layer);
+    g_vCapacities.push_back(vcapValue);
   }
 }
 
 void readHCap(std::ifstream& stream, FT* ft) {
+  g_hCapacities.clear();
   string line;
   getline(stream, line);
-  vector<int> hcaps;
   string token;
   stringstream hcapStream(line);
   hcapStream >> token;
@@ -70,19 +71,14 @@ void readHCap(std::ifstream& stream, FT* ft) {
   assert(token == "capacity");
   int hcapValue;
   while (hcapStream >> hcapValue) {
-    hcaps.push_back(hcapValue);
-  }
-
-  for (int i = 0; i < hcaps.size(); i++) {
-    int layer = i + 1;
-    ft->addHCapacity(hcaps[i] / 2, layer);
+    g_hCapacities.push_back(hcapValue);
   }
 }
 
 void readMinWidth(ifstream& stream, FT* ft) {
+  g_minWidths.clear();
   string line;
   getline(stream, line);
-  vector<int> minwList;
   string token;
   stringstream minwStream(line);
   minwStream >> token;
@@ -91,19 +87,14 @@ void readMinWidth(ifstream& stream, FT* ft) {
   assert(token == "width");
   int minwValue;
   while (minwStream >> minwValue) {
-    minwList.push_back(minwValue);
-  }
-
-  for (int i = 0; i < minwList.size(); i++) {
-    int layer = i + 1;
-    ft->addMinWidth(minwList[i], layer);
+    g_minWidths.push_back(minwValue);
   }
 }
 
 void readMinSpacing(ifstream& stream, FT* ft) {
+  g_minSpacings.clear();
   string line;
   getline(stream, line);
-  vector<int> minsList;
   string token;
   stringstream minsStream(line);
   minsStream >> token;
@@ -112,19 +103,14 @@ void readMinSpacing(ifstream& stream, FT* ft) {
   assert(token == "spacing");
   int minsValue;
   while (minsStream >> minsValue) {
-    minsList.push_back(minsValue);
-  }
-
-  for (int i = 0; i < minsList.size(); i++) {
-    int layer = i + 1;
-    ft->addMinSpacing(minsList[i], layer);
+    g_minSpacings.push_back(minsValue);
   }
 }
 
 void readViaSpacing(ifstream& stream, FT* ft) {
+  g_minViaSpacings.clear();
   string line;
   getline(stream, line);
-  vector<int> minvList;
   string token;
   stringstream minvStream(line);
   minvStream >> token;
@@ -133,12 +119,7 @@ void readViaSpacing(ifstream& stream, FT* ft) {
   assert(token == "spacing");
   int minvValue;
   while (minvStream >> minvValue) {
-    minvList.push_back(minvValue);
-  }
-
-  for (int i = 0; i < minvList.size(); i++) {
-    int layer = i + 1;
-    ft->addViaSpacing(minvList[i], layer);
+    g_minViaSpacings.push_back(minvValue);
   }
 }
 
@@ -153,6 +134,35 @@ void readTileInfo(ifstream& stream, FT* ft) {
   tileInfoStream >> llx >> lly >> xsize >> ysize;
   ft->setLowerLeft(llx, lly);
   ft->setTileSize(xsize, ysize);
+}
+
+void setModifiedCapacities(FT* ft) {
+  for (int i = 0; i < g_vCapacities.size(); i++) {
+    int layer = i + 1;
+    int cap = g_vCapacities[i];
+    int w = g_minWidths[i];
+    int s = g_minSpacings[i];
+    int effective_cap = cap / (w + s);
+
+    ft->addVCapacity(effective_cap, layer);
+    ft->addMinSpacing(0, layer);
+    ft->addMinWidth(1, layer);
+  }
+  for (int i = 0; i < g_hCapacities.size(); i++) {
+    int layer = i + 1;
+    int cap = g_hCapacities[i];
+    int w = g_minWidths[i];
+    int s = g_minSpacings[i];
+    int effective_cap = cap / (w + s);
+
+    ft->addHCapacity(effective_cap, layer);
+    ft->addMinSpacing(0, layer);
+    ft->addMinWidth(1, layer);
+  }
+  for (int i = 0; i < g_minViaSpacings.size(); i++) {
+    int layer = i + 1;
+    ft->addViaSpacing(1, layer);
+  }
 }
 
 bool isWhitespace(const string& line) {
@@ -267,6 +277,7 @@ int main(int argc, char* argv[]) {
   readMinSpacing(infile, ft);
   readViaSpacing(infile, ft);
   readTileInfo(infile, ft);
+  setModifiedCapacities(ft);
   readNumNets(infile, ft);
   ft->setMaxNetDegree(MAX_PINS);
   for (int i = 0; i < g_numNets; i++) {
