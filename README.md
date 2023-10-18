@@ -6,7 +6,8 @@ A standalone version of FastRoute for ISPD2008 benchmarks
 0. (Optional) Run the dev docker
 ```bash
 cd /go/to/working/directory
-docker run -it -v $(pwd):/RUN_FastRoute hvppycoding/centos7-dev
+docker pull hvppycoding/centos7-dev:v1
+docker run -it -v $(pwd):/RUN_FastRoute hvppycoding/centos7-dev:v1
 cd /RUN_FastRoute
 ```
 
