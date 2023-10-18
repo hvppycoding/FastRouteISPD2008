@@ -14,6 +14,3 @@ target_link_libraries(${BIN_NAME}
         FastRoute4.1
         flute
         )
-
-configure_file(etc/POST9.dat POST9.dat COPYONLY)
-configure_file(etc/POWV9.dat POWV9.dat COPYONLY)
