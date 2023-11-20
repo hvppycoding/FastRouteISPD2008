@@ -1106,7 +1106,6 @@ Tree flute(int d, DTYPE x[], DTYPE y[], int acc) {
 
 Tree flutes_RDP(int d, DTYPE xs[], DTYPE ys[], int s[], int acc) {
         int i, j, ss;
-
         ensureLUT(d);
                 
         for (i = 0; i < d - 1; i++) {
@@ -1134,6 +1133,7 @@ Tree flutes_RDP(int d, DTYPE xs[], DTYPE ys[], int s[], int acc) {
 
 // For low-degree, i.e., 2 <= d <= FLUTE_D
 Tree flutes_LD(int d, DTYPE xs[], DTYPE ys[], int s[]) {
+        printf("flutes_LD\n");
         int k, pi, i, j;
         struct csoln *rlist, *bestrlist;
         DTYPE dd[2 * FLUTE_D - 2];  // 0..D-2 for v, D-1..2*D-3 for h
@@ -1166,7 +1166,9 @@ Tree flutes_LD(int d, DTYPE xs[], DTYPE ys[], int s[]) {
                 t.branch[3].y = ys[1];
                 t.branch[3].n = 3;
         } else {
+                printf("ensureLUT\n");
                 ensureLUT(d);
+                printf("ensureLUT Done\n");
                 
                 k = 0;
                 if (s[0] < s[2]) k++;
